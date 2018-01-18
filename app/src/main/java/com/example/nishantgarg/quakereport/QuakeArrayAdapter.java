@@ -18,8 +18,8 @@ import java.util.List;
 public class QuakeArrayAdapter extends ArrayAdapter<Quakes> {
 
 
-    public QuakeArrayAdapter(Context context, int resource, List<Quakes> objects) {
-        super(context, resource, objects);
+    public QuakeArrayAdapter(Context context, List<Quakes> objects) {
+        super(context, 0, objects);
     }
 
     @Override
