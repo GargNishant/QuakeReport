@@ -55,10 +55,11 @@ public class QuakeArrayAdapter extends ArrayAdapter<Quakes> {
         main_placeView.setText(mainPlace);
 
         TextView dateView = (TextView)listItemView.findViewById(R.id.date);
-        dateView.setText(String.valueOf(currentQuake.getmDate()));
+        dateView.setVisibility(View.GONE);
+        //dateView.setText(String.valueOf(currentQuake.getmDate()));
 
         TextView timeView = (TextView)listItemView.findViewById(R.id.time);
-        timeView.setText(String.valueOf(currentQuake.getmTime()));
+        timeView.setText(String.valueOf(currentQuake.getTime()));
 
         // Set the proper background color on the magnitude circle.
         // Fetch the background from the TextView, which is a GradientDrawable.

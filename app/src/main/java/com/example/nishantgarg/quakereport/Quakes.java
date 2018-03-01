@@ -11,13 +11,14 @@ public class Quakes {
 
     private double mMagnitude;
     private String mPlace;
-    private Date mDateObject;
+    //private Date mDateObject;
+    long mDate;
     private String mUrl;
 
     Quakes(double magnitude,String place, long time, String url){
         mMagnitude=magnitude;
         mPlace=place;
-        mDateObject = new Date(time);
+        mDate = time;
         mUrl=url;
     }
 
@@ -29,7 +30,7 @@ public class Quakes {
         return mPlace;
     }
 
-    String getmTime() {
+    /*String getmTime() {
         SimpleDateFormat timeFormatter =new SimpleDateFormat("h:mm a z");
         return timeFormatter.format(mDateObject);
     }
@@ -37,6 +38,10 @@ public class Quakes {
     String getmDate(){
         SimpleDateFormat dateFormatter = new SimpleDateFormat("MMM DD, yyyy");
         return dateFormatter.format(mDateObject);
+    }*/
+    String getTime(){
+        String date = new java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(new java.util.Date (mDate));
+        return date;
     }
 
     String getmUrl() {
