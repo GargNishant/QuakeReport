@@ -1,36 +1,48 @@
 package com.example.nishantgarg.quakereport;
 
 import android.app.Activity;
-import android.content.Intent;
-import android.net.Uri;
+import android.app.DownloadManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.widget.ProgressBar;
+import android.widget.Toast;
+
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-
 public class MainActivity extends Activity {
     // The URL from which we want to extract data.
     private static final String USGS_REQUEST_URL =
             "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson&orderby=time&minmag=4&limit=90";
 
-    //We are creating an instance of class so that we can use it inside our onCreate and AsyncTask class.
-    // It does not let use like QuakeArrayAdapter.(methods in that class), so its better to use it as a instance variable
-    private QuakeArrayAdapter QuakeAdapter;
+    private RecyclerView ParentView;
+    private RecyclerView.LayoutManager layoutManager;
+    private RecyclerView.Adapter adapter;
+    private List<Quakes> quakesList = new ArrayList<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        ListView ParentView=(ListView)findViewById(R.id.parentView);
-        //We are creating a new adapter using the instance of the class created earlier
-        QuakeAdapter=new QuakeArrayAdapter(this, new ArrayList<Quakes>());
-        ParentView.setAdapter(QuakeAdapter);
+        ParentView=(RecyclerView) findViewById(R.id.parentView);
+        layoutManager = new LinearLayoutManager(this);
+        ParentView.setHasFixedSize(true);
+        ParentView.setLayoutManager(layoutManager);
+        loadData();
 
-        ParentView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        /*ParentView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int positionOfItemClicked, long id) {
                 Quakes quake=QuakeAdapter.getItem(positionOfItemClicked);
@@ -39,14 +51,51 @@ public class MainActivity extends Activity {
                 browserIntent.setData(Uri.parse(mURL));
                 startActivity(browserIntent);
             }
-        });
-
-        //Calling the AsyncTask Thread.
-        QuakeAsyncTask task = new QuakeAsyncTask();
-        task.execute(USGS_REQUEST_URL);
+        });*/
     }
 
-    private class QuakeAsyncTask extends AsyncTask<String, Void, List<Quakes>>{
+    private void loadData() {
+        Toast.makeText(this, "Starting Process", Toast.LENGTH_SHORT).show();
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, USGS_REQUEST_URL,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        try{
+                            JSONObject baseJsonResponse = new JSONObject(response);
+                            JSONArray earthquakeArray = baseJsonResponse.getJSONArray("features");
+                            for (int i = 0; i < earthquakeArray.length(); i++) {
+                                JSONObject currentEarthquake = earthquakeArray.getJSONObject(i);
+                                JSONObject properties = currentEarthquake.getJSONObject("properties");
+                                double magnitude = properties.getDouble("mag");
+                                String location = properties.getString("place");
+                                long time = properties.getLong("time");
+                                String url = properties.getString("url");
+
+                                Quakes earthquake = new Quakes(magnitude, location, time, url);
+                                quakesList.add(earthquake);
+                            }
+                        }
+                        catch(JSONException e){
+                            e.printStackTrace();
+                        }
+                        Toast.makeText(MainActivity.this, "Almost Done", Toast.LENGTH_SHORT).show();
+                        adapter = new QuakeArrayAdapter(quakesList);
+                        ParentView.setAdapter(adapter);
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(MainActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        requestQueue.add(stringRequest);
+
+
+    }
+
+    /*private class QuakeAsyncTask extends AsyncTask<String, Void, List<Quakes>>{
 
         @Override
         protected List<Quakes> doInBackground(String... urls) {
@@ -59,10 +108,17 @@ public class MainActivity extends Activity {
         }
         @Override
         protected void onPostExecute(List<Quakes> quakes) {
-            QuakeAdapter.clear();
             if (quakes != null && !quakes.isEmpty()) {
-                QuakeAdapter.addAll(quakes);
+                QuakeAdapter = new QuakeArrayAdapter(quakesList);
+                Toast.makeText(MainActivity.this, "Fetched Data", Toast.LENGTH_SHORT).show();
+                layoutManager = new LinearLayoutManager(MainActivity.this);
+                ParentView.setHasFixedSize(true);
+                ParentView.setLayoutManager(layoutManager);
+                QuakeAdapter = new QuakeArrayAdapter(quakesList);
+                ParentView.setAdapter(QuakeAdapter);
+
+
             }
         }
-    }
+    }*/
 }
